@@ -31,3 +31,11 @@ Kytkimet hyödyntävät **iBGP**-protokollaa edellä mainittujen tietojen mainos
 ## Päätelaitteet ja Anycast Gateway
 
 Jokaiselle PVE-palvelimelle on luotu kaksi Alpine Linux -virtuaalikonetta. PVE-palvelimet on konfiguroitu lisäämään virtuaalikoneiden verkkoliikenteeseen 802.1Q-tunnisteen, jota hyödyntämällä Leaf-tason kytkimet osaavat yhdistää virtuaalikoneen oikeaan VLANiin. LEAF-tason kytkimille on konfiguroitu **Anycast Gateway** jokaiseen asiakaskohtaiseen VLANiin. Tämä mahdollistaa virtuaalikoneiden liikuttamisen palvelimelta toiselle ilman Default Gateway tai ARP-taulu muutoksia.
+
+## Validaatiot ja testitulokset
+
+Verkon toimivuuden, Control-Planen ja asiakaseristyksen validointeihin käytetyt komennot ja tulosteet löytyvät `validaatiot/`-kansiosta:
+
+1. [Control Plane validointi](validaatiot/control-plane-validaatiot.md)
+2. [Asiakaseristys ja taulukot](validaatiot/vxlan-validaatiot.md)
+3. [Päätelaitteiden yhteyksien validointi](validaatiot/l2-l3-validaatiot.md)
