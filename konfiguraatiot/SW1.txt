@@ -1,0 +1,180 @@
+! Cisco Nexus SW1 Running Konfiguraatio
+!
+version 10.3(10)
+hostname SW1
+!
+nv overlay evpn
+feature ospf
+feature bgp
+feature interface-vlan
+feature vn-segment-vlan-based
+feature nv overlay
+!
+no ip domain-lookup
+ip domain-name xyz.lab
+!
+fabric forwarding anycast-gateway-mac 0045.0b01.0101
+!
+vlan 1,10-11,20-21,100,200
+!
+vlan 10
+  name WEB-A-L2VNI
+  vn-segment 10010
+vlan 11
+  name APP-A-L2VNI
+  vn-segment 10011
+vlan 20
+  name WEB-B-L2VNI
+  vn-segment 10020
+vlan 21
+  name DB-B-L2VNI
+  vn-segment 10021
+vlan 100
+  name TENANT-A-L3VNI
+  vn-segment 10100
+vlan 200
+  name TENANT-B-L3VNI
+  vn-segment 10200
+!
+vrf context TENANT-A
+  vni 10100
+  rd auto
+  address-family ipv4 unicast
+    route-target both auto
+    route-target both auto evpn
+!
+vrf context TENANT-B
+  vni 10200
+  rd auto
+  address-family ipv4 unicast
+    route-target both auto
+    route-target both auto evpn
+!
+interface Vlan10
+  no shutdown
+  vrf member TENANT-A
+  no ip redirects
+  ip address 172.16.0.1/24
+  fabric forwarding mode anycast-gateway
+!
+interface Vlan11
+  no shutdown
+  vrf member TENANT-A
+  no ip redirects
+  ip address 172.16.1.1/24
+  fabric forwarding mode anycast-gateway
+!
+interface Vlan20
+  no shutdown
+  vrf member TENANT-B
+  no ip redirects
+  ip address 172.16.0.1/24
+  fabric forwarding mode anycast-gateway
+!
+interface Vlan21
+  no shutdown
+  vrf member TENANT-B
+  no ip redirects
+  ip address 172.16.1.1/24
+  fabric forwarding mode anycast-gateway
+!
+interface Vlan100
+  no shutdown
+  vrf member TENANT-A
+  ip forward
+!
+interface Vlan200
+  no shutdown
+  vrf member TENANT-B
+  ip forward
+!
+interface nve1
+  no shutdown
+  host-reachability protocol bgp
+  source-interface loopback1
+  member vni 10010
+    ingress-replication protocol bgp
+  member vni 10011
+    ingress-replication protocol bgp
+  member vni 10020
+    ingress-replication protocol bgp
+  member vni 10021
+    ingress-replication protocol bgp
+  member vni 10100 associate-vrf
+  member vni 10200 associate-vrf
+!
+interface Ethernet1/1
+  description Link To Spine SW4
+  no switchport
+  mtu 1550
+  mac-address 0045.6610.0101
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  no shutdown
+!
+interface Ethernet1/2
+  description Link To Spine SW5
+  no switchport
+  mtu 1550
+  mac-address 0045.6610.0102
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  no shutdown
+!
+interface Ethernet1/10
+  description Trunk Link to Server
+  switchport mode trunk
+  switchport trunk allowed vlan 10-11,20-21
+!
+interface loopback0
+  description Router-Id
+  ip address 10.0.0.1/32
+  ip router ospf UNDERLAY area 0.0.0.0
+!
+interface loopback1
+  description VTEP NVE
+  ip address 10.0.0.11/32
+  ip router ospf UNDERLAY area 0.0.0.0
+!
+router ospf UNDERLAY
+  router-id 10.0.0.1
+  log-adjacency-changes
+  auto-cost reference-bandwidth 100000 Mbps
+!
+router bgp 65000
+  router-id 10.0.0.1
+  log-neighbor-changes
+  template peer SPINE-RR
+    remote-as internal
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+  neighbor 10.0.0.4
+    inherit peer SPINE-RR
+  neighbor 10.0.0.5
+    inherit peer SPINE-RR
+!
+evpn
+  vni 10010 l2
+    rd auto
+    route-target import auto
+    route-target export auto
+  vni 10011 l2
+    rd auto
+    route-target import auto
+    route-target export auto
+  vni 10020 l2
+    rd auto
+    route-target import auto
+    route-target export auto
+  vni 10021 l2
+    rd auto
+    route-target import auto
+    route-target export auto
+!
+end

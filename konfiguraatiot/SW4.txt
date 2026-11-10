@@ -1,0 +1,74 @@
+! Cisco Nexus SW4 Running Konfiguraatio
+!
+version 10.3(10)
+hostname SW4
+!
+nv overlay evpn
+feature ospf
+feature bgp
+feature nv overlay
+!
+no ip domain-lookup
+ip domain-name xyz.lab
+!
+interface Ethernet1/1
+  description Link To Leaf SW1
+  no switchport
+  mtu 1550
+  mac-address 0045.0f10.0101
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  no shutdown
+!
+interface Ethernet1/2
+  description Link To Leaf SW2
+  no switchport
+  mtu 1550
+  mac-address 0045.0f10.0102
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  no shutdown
+!
+interface Ethernet1/3
+  description Link To Leaf SW3
+  no switchport
+  mtu 1550
+  mac-address 0045.0f10.0103
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  no shutdown
+!
+interface loopback0
+  description Router-Id
+  ip address 10.0.0.4/32
+  ip router ospf UNDERLAY area 0.0.0.0
+!
+router ospf UNDERLAY
+  router-id 10.0.0.4
+  log-adjacency-changes
+  auto-cost reference-bandwidth 100000 Mbps
+!
+router bgp 65000
+  router-id 10.0.0.4
+  log-neighbor-changes
+  template peer LEAF-VTEP
+    remote-as internal
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+      route-reflector-client
+  neighbor 10.0.0.1
+    inherit peer LEAF-VTEP
+  neighbor 10.0.0.2
+    inherit peer LEAF-VTEP
+  neighbor 10.0.0.3
+    inherit peer LEAF-VTEP
+!
+end
